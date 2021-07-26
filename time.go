@@ -3,7 +3,6 @@ package testtime
 import (
 	"runtime"
 	"sync"
-	"testing"
 	"time"
 	_ "unsafe" // for go:linkname
 )
@@ -11,9 +10,15 @@ import (
 //go:linkname timeMap time.timeMap
 var timeMap sync.Map
 
+// testingT is an interface wrapper around testing.TB.
+type testingT interface {
+	Helper()
+	Cleanup(func())
+}
+
 // SetTime sets a fixed time with its caller.
-func SetTime(tb testing.TB, tm time.Time) bool {
-	tb.Helper()
+func SetTime(t testingT, tm time.Time) bool {
+	t.Helper()
 	name, ok := funcName(1)
 	if !ok {
 		return false
@@ -22,7 +27,7 @@ func SetTime(tb testing.TB, tm time.Time) bool {
 		return tm
 	})
 
-	tb.Cleanup(func() {
+	t.Cleanup(func() {
 		timeMap.Delete(name)
 	})
 
@@ -30,15 +35,15 @@ func SetTime(tb testing.TB, tm time.Time) bool {
 }
 
 // SetFunc sets a function which returns time.Time.
-func SetFunc(tb testing.TB, f func() time.Time) bool {
-	tb.Helper()
+func SetFunc(t testingT, f func() time.Time) bool {
+	t.Helper()
 	name, ok := funcName(1)
 	if !ok {
 		return false
 	}
 	timeMap.Store(name, f)
 
-	tb.Cleanup(func() {
+	t.Cleanup(func() {
 		timeMap.Delete(name)
 	})
 
