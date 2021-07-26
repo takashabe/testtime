@@ -12,8 +12,8 @@ import (
 var timeMap sync.Map
 
 // SetTime sets a fixed time with its caller.
-func SetTime(t *testing.T, tm time.Time) bool {
-	t.Helper()
+func SetTime(tb testing.TB, tm time.Time) bool {
+	tb.Helper()
 	name, ok := funcName(1)
 	if !ok {
 		return false
@@ -22,7 +22,7 @@ func SetTime(t *testing.T, tm time.Time) bool {
 		return tm
 	})
 
-	t.Cleanup(func() {
+	tb.Cleanup(func() {
 		timeMap.Delete(name)
 	})
 
@@ -30,15 +30,15 @@ func SetTime(t *testing.T, tm time.Time) bool {
 }
 
 // SetFunc sets a function which returns time.Time.
-func SetFunc(t *testing.T, f func() time.Time) bool {
-	t.Helper()
+func SetFunc(tb testing.TB, f func() time.Time) bool {
+	tb.Helper()
 	name, ok := funcName(1)
 	if !ok {
 		return false
 	}
 	timeMap.Store(name, f)
 
-	t.Cleanup(func() {
+	tb.Cleanup(func() {
 		timeMap.Delete(name)
 	})
 
